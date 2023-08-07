@@ -20,11 +20,6 @@ const io = new Server(server, {
 io.on("connection", (socket) => {
   console.log(`Connected User: ${socket}`);
 
-  socket.on("sendMessage", (data) => {
-    console.log("data", data)
-    socket.to(data.conversation_id).emit("receiveMessage", data);
-  });
-
   socket.on("joinConversation", (data, cb) => {
     socket.join(data.conversation_id);
     cb({ ...data, content: `${data.person_id} just joined the room.` });
@@ -34,12 +29,20 @@ io.on("connection", (socket) => {
     // console.log("users", users);
   });
 
+  socket.on("sendMessage", (data) => {
+    socket.to(data.conversation_id).emit("receiveMessage", data);
+  });
+
+  socket.on("typing", (data) => {
+    socket.to(data.conversation_id).emit("displayTyping", data);
+  });
+
   socket.on("upload", (file, callback) => {
     console.log(file); // <Buffer 25 50 44 ...>
 
     // save the content to the disk, for example
     fs.writeFile("/Users/arbenaziri/Downloads", file, (err) => {
-      console.log("err", err)
+      console.log("err", err);
       callback({ message: err ? "failure" : "success" });
     });
   });
